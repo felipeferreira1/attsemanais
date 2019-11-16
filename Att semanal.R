@@ -293,3 +293,51 @@ for (i in 1:length(unique(tx_cambio_final$DataReferencia))){
 tx_cambio_final_sep = tx_cambio_final_sep[,order(colnames(tx_cambio_final_sep))]
 
 write.csv2(tx_cambio_final_sep,"10-tx_cambio_final.csv", row.names = F)
+
+
+#11) Conta corrente
+bp = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=100&$filter=Indicador%20eq%20'Balan%C3%A7o%20de%20Pagamentos'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media")))
+bp$Data = as.Date(bp$Data, "%Y-%m-%d")
+bp = bp[order(bp$Data, bp$DataReferencia),]
+bp = bp %>% filter(IndicadorDetalhe=="Conta corrente")
+bp = subset(bp, select = -c(Indicador, IndicadorDetalhe))
+for (i in 1:length(unique(bp$DataReferencia))){
+  ano = (unique(bp$DataReferencia))[i]
+  dados = bp %>% filter(DataReferencia==ano)
+  dados = dados[-2]
+  colnames(dados) = c('Data', paste("Media", ano, sep = " "))
+  if(i==1)
+    bp_sep = dados
+  else
+    bp_sep = left_join(bp_sep, dados, by = "Data")
+}
+bp_sep = bp_sep[,order(colnames(bp_sep))]
+
+write.csv2(bp_sep,"11-balanco_pgto.csv", row.names = F)
+
+
+#12)Inflação implícita EUA mensal
+serie5 = c("T5YIEM", "T7YIEM", "T10YIEM",	"T20YIEM",	"T30YIEM")
+inflacao_impl_EUA_mensal = coleta_dados_fred(serie5, "2003-01-01")
+
+write.csv2(inflacao_impl_EUA_mensal,"12-inflacao_implicita_EUA_mensal.csv", row.names = F)
+
+
+#12)Inflação implícita EUA diária.
+serie6 = c("T5YIE", "T10YIE")
+inflacao_impl_EUA_diaria = coleta_dados_fred(serie6, "2003-01-01")
+
+write.csv2(inflacao_impl_EUA_diaria,"13-inflacao_implicita_EUA_diaria.csv", row.names = F)
+
+
+#13) Curva de juros EUA
+serie7 = c("DGS1MO", "DGS3MO", "DGS6MO", "DGS1", "DGS2", "DGS3", "DGS5", "DGS7", "DGS10", "DGS20", "DGS30")
+curva_juros_EUA = coleta_dados_fred(serie7, "2019-01-01")
+
+write.csv2(curva_juros_EUA,"14-curva_juros_EUA.csv", row.names = F)
+
+
+#14) Curva de rendimentos EUA
+serie8 = c("T10Y2YM", "USREC")
+curva_rendimentos_EUA = coleta_dados_fred(serie8, "1976-06-01")
+write.csv2(curva_rendimentos_EUA,"15-curva_rendimentos_EUA.csv", row.names = F)
