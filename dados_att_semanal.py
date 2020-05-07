@@ -6,7 +6,7 @@ Created on Thu Oct  4 16:13:21 2018
 '''
 #Importações de módulos
 import pandas as pd
-from sgs import time_serie
+#from sgs import time_serie
 from datetime import date
 from fredapi import Fred
 
@@ -37,31 +37,31 @@ def converter_em_lista(string):
     li = list(string.split(" "))
     return li 
 
-#def dados_serie_sgs(codigo_series, data_inicial = '01/01/2017', data_final = ajeita_data()):
-#    '''Funcao que pega o código de n séries e coleta seus valores entre as datas definidas
-#    Parâmetro de entrada: int, str, str
-#    Valor de retorno: pandas'''
-#    codigo_series = converter_em_lista(codigo_series)
-#    for i in range(len(list(codigo_series))):
-#        url_sgs = ("http://api.bcb.gov.br/dados/serie/bcdata.sgs." + str(codigo_series[i]) + "/dados?formato=csv&data_inicial=" + data_inicial + "&data_final=" + data_final)
-#        dados_um_codigo = pd.read_csv(url_sgs, sep=';', dtype = 'str')
-#        dados_um_codigo = dados_um_codigo.set_index('data')
-#        dados_um_codigo = dados_um_codigo['valor'].str.replace(',', '.')
-#        dados_um_codigo = dados_um_codigo.astype(float)
-#        dados_um_codigo = pd.DataFrame(dados_um_codigo)
-#        dados_um_codigo = dados_um_codigo.rename(columns = {'Index': 'data', 'valor': str(codigo_series[i])})
-#        if i==0:
-#            dados_merge = dados_um_codigo
-#        else:
-#            dados_merge = dados_merge.merge(dados_um_codigo, how='outer',on='data')
-#    return dados_merge
-
 def dados_serie_sgs(codigo_series, data_inicial = '01/01/2017', data_final = ajeita_data()):
-    '''Funcao que pega o código de uma série e coleta seus valores entre as datas definidas
+    '''Funcao que pega o código de n séries e coleta seus valores entre as datas definidas
     Parâmetro de entrada: int, str, str
     Valor de retorno: pandas'''
-    resultado = time_serie(codigo_series, data_inicial, data_final)
-    return resultado
+    codigo_series = converter_em_lista(codigo_series)
+    for i in range(len(list(codigo_series))):
+        url_sgs = ("http://api.bcb.gov.br/dados/serie/bcdata.sgs." + str(codigo_series[i]) + "/dados?formato=csv&data_inicial=" + data_inicial + "&data_final=" + data_final)
+        dados_um_codigo = pd.read_csv(url_sgs, sep=';', dtype = 'str')
+        dados_um_codigo = dados_um_codigo.set_index('data')
+        dados_um_codigo = dados_um_codigo['valor'].str.replace(',', '.')
+        dados_um_codigo = dados_um_codigo.astype(float)
+        dados_um_codigo = pd.DataFrame(dados_um_codigo)
+        dados_um_codigo = dados_um_codigo.rename(columns = {'Index': 'data', 'valor': str(codigo_series[i])})
+        if i==0:
+            dados_merge = dados_um_codigo
+        else:
+            dados_merge = dados_merge.merge(dados_um_codigo, how='outer',on='data')
+    return dados_merge
+
+#def dados_serie_sgs(codigo_series, data_inicial = '01/01/2017', data_final = ajeita_data()):
+#    '''Funcao que pega o código de uma série e coleta seus valores entre as datas definidas
+#    Parâmetro de entrada: int, str, str
+#    Valor de retorno: pandas'''
+#    resultado = time_serie(codigo_series, data_inicial, data_final)
+#    return resultado
 
 def organiza(dados, nomecoluna):
     '''Função que organiza linhas de acordo com ordem de uma coluna
@@ -263,10 +263,9 @@ juros_exante = ((1 + di_futuro_tabela/100)/(1 + expec_ipca_12meses_tabela/100)-1
 top5_ipca_12meses_C = expectativas(url_top5_ipca_12meses, True, False, False, True, 'C', False, '')
 top5_ipca_12meses_C = float(top5_ipca_12meses_C['Mediana'].head(1))
 
-
 juros_expost = ((1 + selic_acum_12meses_tabela/100)/(1 + top5_ipca_12meses_C/100)-1)*100
 
-expec_ipca_12meses_atual = ((1 + ipca_12meses_ultimo_mes/100)/((1 + ipca_mensal_12meses_atras/100)*(1 + top5_ipca_12meses_C/100))-1)*100
+expec_ipca_12meses_atual = ((1 + ipca_12meses_ultimo_mes.iloc[0,0]/100)/((1 + ipca_mensal_12meses_atras.iloc[0,0]/100)*(1 + top5_ipca_12meses_C/100))-1)*100
 
 tabela = [['Meta Selic', meta_selic_tabela],
                 ['Selic acumulada no mês - % a.m.', selic_acum_tabela],
