@@ -9,6 +9,11 @@ import pandas as pd
 #from sgs import time_serie
 from datetime import date
 from fredapi import Fred
+from matplotlib.dates import DateFormatter
+import matplotlib.pyplot as plt
+
+#Formatando data para gráfico em formato BR
+myFmt = DateFormatter("%d/%m/%Y")
 
 #Chave da API do FRED
 fred = Fred(api_key='759fd9f905b9d4025ce26e5ae6e63cb9')
@@ -173,6 +178,17 @@ del expec_selic['Indicador']
 
 expec_selic.to_csv(diretorio + '01-expec_meta_selic.csv', sep = ';', index = False)
 
+#Gráfico
+figD, axD = plt.subplots(figsize=(14,10))
+axD.plot(expec_selic['DataReferencia'], expec_selic['Mediana'], 'b-', linewidth=5, label = "Expectativa para meta SELIC")
+plt.xlabel("Datas")
+plt.ylabel("% a.a.")
+axD.legend()
+plt.xticks(rotation=90) #Girando eixo x
+axD.xaxis.set_major_formatter(myFmt) #Mudando formato da data do eixo x
+axD.yaxis.set_major_locator(plt.MultipleLocator(0.25)) #Mudando intervalo do eixo y
+plt.savefig(diretorio + "expec_selic.png") #salvando gráfico
+
 
 #2) Taxas de juros
 meta_selic = dados_serie_sgs(432)
@@ -188,6 +204,29 @@ print('')
 taxas_de_juros = pd.merge(meta_selic, tx_media_juros, left_index = True, right_index = True)
 
 taxas_de_juros.to_csv(diretorio + '02-taxas_de_juros.csv', sep = ';', index = True)
+
+#Gráfico
+figD, axD = plt.subplots(figsize=(14,10))
+axD.plot(taxas_de_juros['432'].tail(360), 'b-', linewidth=5, label = "Meta SELIC")
+axD.set_xlabel('Datas')
+#plt.xlabel("Datas")
+axD.set_ylabel('%a.a.', color='blue')
+axD.legend(loc=2)
+#plt.ylabel("% a.a.")
+plt.xticks(rotation=90) #Girando eixo x
+axD.xaxis.set_major_formatter(myFmt) #Mudando formato da data do eixo x
+axD.tick_params(axis='y', labelcolor='blue')
+#axD.xaxis.set_major_locator(plt.MultipleLocator(10)) #Mudando intervalo do eixo x
+axD.yaxis.set_major_locator(plt.MultipleLocator(0.5)) #Mudando intervalo do eixo y
+axE = axD.twinx()
+color = 'tab:red'
+axE.plot(taxas_de_juros['20717'].tail(360), color=color, linewidth=5, label = "Taxa média de juros")
+axE.set_ylabel('%a.a.', color=color)
+axE.legend(loc=0)
+axE.tick_params(axis='y', labelcolor=color)
+axE.yaxis.set_major_locator(plt.MultipleLocator(2)) #Mudando intervalo do eixo y
+axE.xaxis.set_major_locator(plt.MaxNLocator(20)) #Mudando intervalo do eixo x
+plt.savefig(diretorio + "taxas_de_juros.png") #salvando gráfico
 
 
 #3) Swaps diário, dólar, Ibovespa, SP&500
