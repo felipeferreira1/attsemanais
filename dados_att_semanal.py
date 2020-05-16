@@ -29,8 +29,8 @@ def ajeita_data():
     Valor de retorno: str'''
     hj = date.today()
     ano = str(hj.year)
-    mes = str(hj.month)
-    dia = str(hj.day)
+    mes = '{:02d}'.format(hj.month)
+    dia = '{:02d}'.format(hj.day)
     data_ajustada = dia + '/' + mes + '/' + ano
     return data_ajustada
 
@@ -48,7 +48,7 @@ def dados_serie_sgs(codigo_series, data_inicial = '01/01/2017', data_final = aje
     Valor de retorno: pandas'''
     codigo_series = converter_em_lista(codigo_series)
     for i in range(len(list(codigo_series))):
-        url_sgs = ("http://api.bcb.gov.br/dados/serie/bcdata.sgs." + str(codigo_series[i]) + "/dados?formato=csv&data_inicial=" + data_inicial + "&data_final=" + data_final)
+        url_sgs = ("http://api.bcb.gov.br/dados/serie/bcdata.sgs." + str(codigo_series[i]) + "/dados?formato=csv&dataInicial=" + data_inicial + "&dataFinal=" + data_final)
         dados_um_codigo = pd.read_csv(url_sgs, sep=';', dtype = 'str')
         dados_um_codigo = dados_um_codigo.set_index('data')
         dados_um_codigo = dados_um_codigo['valor'].str.replace(',', '.')
