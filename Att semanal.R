@@ -185,7 +185,7 @@ for (i in 1:length(unique(ipca$DataReferencia))){
   if(i==1)
     ipca_sep = dados
   else
-    ipca_sep = left_join(ipca_sep, dados, by = "Data")
+    ipca_sep = full_join(ipca_sep, dados, by = "Data")
 }
 
 write.csv2(ipca_sep,"05-Dados_IPCA.csv", row.names = F)
@@ -205,7 +205,7 @@ for (i in 1:length(unique(pib_trim$DataReferencia))){
   if(i==1)
     pib_trim_sep = dados
   else
-    pib_trim_sep = left_join(pib_trim_sep, dados, by = "Data")
+    pib_trim_sep = full_join(pib_trim_sep, dados, by = "Data")
 }
 pib_trim_sep = pib_trim_sep[,order(colnames(pib_trim_sep))]
 
@@ -225,7 +225,7 @@ for (i in 1:length(unique(pib_anual$DataReferencia))){
   if(i==1)
     pib_anual_sep = dados
   else
-    pib_anual_sep = left_join(pib_anual_sep, dados, by = "Data")
+    pib_anual_sep = full_join(pib_anual_sep, dados, by = "Data")
 }
 pib_anual_sep = pib_anual_sep[,order(colnames(pib_anual_sep))]
 
@@ -236,7 +236,8 @@ write.csv2(pib_anual_sep,"07-PIB_anual.csv", row.names = F)
 result_prim = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=1000&$skip=0&$filter=Indicador%20eq%20'Fiscal'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media,DesvioPadrao")))
 result_prim$Data = as.Date(result_prim$Data, "%Y-%m-%d")
 result_prim = result_prim[order(result_prim$Data, result_prim$DataReferencia),]
-result_prim = result_prim %>% filter(IndicadorDetalhe=="Resultado PrimÃ¡rio")
+Encoding(result_prim$IndicadorDetalhe) = "UTF-8"
+result_prim = result_prim %>% filter(IndicadorDetalhe=="Resultado Primário")
 result_prim = subset(result_prim, select = -c(Indicador, IndicadorDetalhe))
 for (i in 1:length(unique(result_prim$DataReferencia))){
   ano = (unique(result_prim$DataReferencia))[i]
@@ -246,18 +247,60 @@ for (i in 1:length(unique(result_prim$DataReferencia))){
   if(i==1)
     result_prim_sep = dados
   else
-    result_prim_sep = left_join(result_prim_sep, dados, by = "Data")
+    result_prim_sep = full_join(result_prim_sep, dados, by = "Data")
 }
 result_prim_sep = result_prim_sep[,order(colnames(result_prim_sep))]
 
 write.csv2(result_prim_sep,"08-result_prim.csv", row.names = F)
 
+#9) Resultado nominal
+result_nominal = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=1000&$skip=0&$filter=Indicador%20eq%20'Fiscal'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media,DesvioPadrao")))
+result_nominal$Data = as.Date(result_nominal$Data, "%Y-%m-%d")
+result_nominal = result_nominal[order(result_nominal$Data, result_nominal$DataReferencia),]
+result_nominal = result_nominal %>% filter(IndicadorDetalhe=="Resultado Nominal")
+result_nominal = subset(result_nominal, select = -c(Indicador, IndicadorDetalhe))
+for (i in 1:length(unique(result_nominal$DataReferencia))){
+  ano = (unique(result_nominal$DataReferencia))[i]
+  dados = result_nominal %>% filter(DataReferencia==ano)
+  dados = dados[-2]
+  colnames(dados) = c('Data', paste("Media", ano, sep = " "), paste("Desvio Padrão", ano, sep = " "))
+  if(i==1)
+    result_nominal_sep = dados
+  else
+    result_nominal_sep = full_join(result_nominal_sep, dados, by = "Data")
+}
+result_nominal_sep = result_nominal_sep[,order(colnames(result_nominal_sep))]
 
-#9) Taxa cãmbio média do ano
+write.csv2(result_nominal_sep,"09-result_nominal.csv", row.names = F)
+
+#10) Dívida líquida
+div_liquida = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=1000&$skip=0&$filter=Indicador%20eq%20'Fiscal'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media,DesvioPadrao")))
+div_liquida$Data = as.Date(div_liquida$Data, "%Y-%m-%d")
+div_liquida = div_liquida[order(div_liquida$Data, div_liquida$DataReferencia),]
+Encoding(div_liquida$IndicadorDetalhe) = "UTF-8"
+div_liquida = div_liquida %>% filter(IndicadorDetalhe=="Dívida líquida do setor público")
+div_liquida = subset(div_liquida, select = -c(Indicador, IndicadorDetalhe))
+for (i in 1:length(unique(div_liquida$DataReferencia))){
+  ano = (unique(div_liquida$DataReferencia))[i]
+  dados = div_liquida %>% filter(DataReferencia==ano)
+  dados = dados[-2]
+  colnames(dados) = c('Data', paste("Media", ano, sep = " "), paste("Desvio Padrão", ano, sep = " "))
+  if(i==1)
+    div_liquida_sep = dados
+  else
+    div_liquida_sep = full_join(div_liquida_sep, dados, by = "Data")
+}
+div_liquida_sep = div_liquida_sep[,order(colnames(div_liquida_sep))]
+
+write.csv2(div_liquida_sep,"10-div_liquida.csv", row.names = F)
+
+
+#11) Taxa cãmbio média do ano
 tx_cambio_media = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=1000&$skip=0&$filter=Indicador%20eq%20'Taxa%20de%20c%C3%A2mbio'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media,DesvioPadrao")))
 tx_cambio_media$Data = as.Date(tx_cambio_media$Data, "%Y-%m-%d")
 tx_cambio_media = tx_cambio_media[order(tx_cambio_media$Data, tx_cambio_media$DataReferencia),]
-tx_cambio_media = tx_cambio_media %>% filter(IndicadorDetalhe=="MÃ©dia do ano")
+Encoding(tx_cambio_media$IndicadorDetalhe) = "UTF-8"
+tx_cambio_media = tx_cambio_media %>% filter(IndicadorDetalhe=="Média do ano")
 tx_cambio_media = subset(tx_cambio_media, select = -c(Indicador, IndicadorDetalhe))
 for (i in 1:length(unique(tx_cambio_media$DataReferencia))){
   ano = (unique(tx_cambio_media$DataReferencia))[i]
@@ -267,14 +310,14 @@ for (i in 1:length(unique(tx_cambio_media$DataReferencia))){
   if(i==1)
     tx_cambio_media_sep = dados
   else
-    tx_cambio_media_sep = left_join(tx_cambio_media_sep, dados, by = "Data")
+    tx_cambio_media_sep = full_join(tx_cambio_media_sep, dados, by = "Data")
 }
 tx_cambio_media_sep = tx_cambio_media_sep[,order(colnames(tx_cambio_media_sep))]
 
-write.csv2(tx_cambio_media_sep,"09-tx_cambio_media.csv", row.names = F)
+write.csv2(tx_cambio_media_sep,"11-tx_cambio_media.csv", row.names = F)
 
 
-#10) Taxa cãmbio final do ano
+#12) Taxa cãmbio final do ano
 tx_cambio_final = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=1000&$skip=0&$filter=Indicador%20eq%20'Taxa%20de%20c%C3%A2mbio'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media,DesvioPadrao")))
 tx_cambio_final$Data = as.Date(tx_cambio_final$Data, "%Y-%m-%d")
 tx_cambio_final = tx_cambio_final[order(tx_cambio_final$Data, tx_cambio_final$DataReferencia),]
@@ -288,14 +331,14 @@ for (i in 1:length(unique(tx_cambio_final$DataReferencia))){
   if(i==1)
     tx_cambio_final_sep = dados
   else
-    tx_cambio_final_sep = left_join(tx_cambio_final_sep, dados, by = "Data")
+    tx_cambio_final_sep = full_join(tx_cambio_final_sep, dados, by = "Data")
 }
 tx_cambio_final_sep = tx_cambio_final_sep[,order(colnames(tx_cambio_final_sep))]
 
-write.csv2(tx_cambio_final_sep,"10-tx_cambio_final.csv", row.names = F)
+write.csv2(tx_cambio_final_sep,"12-tx_cambio_final.csv", row.names = F)
 
 
-#11) Conta corrente
+#13) Conta corrente
 bp = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=100&$filter=Indicador%20eq%20'Balan%C3%A7o%20de%20Pagamentos'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media")))
 bp$Data = as.Date(bp$Data, "%Y-%m-%d")
 bp = bp[order(bp$Data, bp$DataReferencia),]
@@ -309,35 +352,35 @@ for (i in 1:length(unique(bp$DataReferencia))){
   if(i==1)
     bp_sep = dados
   else
-    bp_sep = left_join(bp_sep, dados, by = "Data")
+    bp_sep = full_join(bp_sep, dados, by = "Data")
 }
 bp_sep = bp_sep[,order(colnames(bp_sep))]
 
-write.csv2(bp_sep,"11-balanco_pgto.csv", row.names = F)
+write.csv2(bp_sep,"13-balanco_pgto.csv", row.names = F)
 
 
-#12)Inflação implícita EUA mensal
+#14)Inflação implícita EUA mensal
 serie5 = c("T5YIEM", "T7YIEM", "T10YIEM",	"T20YIEM",	"T30YIEM")
 inflacao_impl_EUA_mensal = coleta_dados_fred(serie5, "2003-01-01")
 
-write.csv2(inflacao_impl_EUA_mensal,"12-inflacao_implicita_EUA_mensal.csv", row.names = F)
+write.csv2(inflacao_impl_EUA_mensal,"14-inflacao_implicita_EUA_mensal.csv", row.names = F)
 
 
-#12)Inflação implícita EUA diária.
+#15)Inflação implícita EUA diária.
 serie6 = c("T5YIE", "T10YIE")
 inflacao_impl_EUA_diaria = coleta_dados_fred(serie6, "2003-01-01")
 
-write.csv2(inflacao_impl_EUA_diaria,"13-inflacao_implicita_EUA_diaria.csv", row.names = F)
+write.csv2(inflacao_impl_EUA_diaria,"15-inflacao_implicita_EUA_diaria.csv", row.names = F)
 
 
-#13) Curva de juros EUA
+#16) Curva de juros EUA
 serie7 = c("DGS1MO", "DGS3MO", "DGS6MO", "DGS1", "DGS2", "DGS3", "DGS5", "DGS7", "DGS10", "DGS20", "DGS30")
 curva_juros_EUA = coleta_dados_fred(serie7, "2019-01-01")
 
-write.csv2(curva_juros_EUA,"14-curva_juros_EUA.csv", row.names = F)
+write.csv2(curva_juros_EUA,"16-curva_juros_EUA.csv", row.names = F)
 
 
-#14) Curva de rendimentos EUA
+#17) Curva de rendimentos EUA
 serie8 = c("T10Y2YM", "USREC")
 curva_rendimentos_EUA = coleta_dados_fred(serie8, "1976-06-01")
-write.csv2(curva_rendimentos_EUA,"15-curva_rendimentos_EUA.csv", row.names = F)
+write.csv2(curva_rendimentos_EUA,"17-curva_rendimentos_EUA.csv", row.names = F)
