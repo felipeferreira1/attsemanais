@@ -70,7 +70,7 @@ coleta_dados_fred = function(series, datainicial="2018-01-01", datafinal = forma
 }
 
 #1) Meta para taxa over selic semanal
-meta_selic = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativaMercadoMensais?$top=100&$skip=0&$filter=Indicador%20eq%20'Meta%20para%20taxa%20over-selic'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,Data,DataReferencia,Mediana,numeroRespondentes")))
+meta_selic = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativaMercadoMensais?$top=100&$skip=0&$filter=Indicador%20eq%20'Selic'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,Data,DataReferencia,Mediana,numeroRespondentes")))
 meta_selic$Data = as.Date(meta_selic$Data, "%Y-%m-%d")
 meta_selic$DataReferencia = as.yearmon(meta_selic$DataReferencia, "%m/%Y")
 meta_selic = meta_selic[order(meta_selic$Data, meta_selic$DataReferencia),]
@@ -259,18 +259,19 @@ write.csv2(pib_anual_sep,"07-PIB_anual.csv", row.names = F)
 export(pib_anual_sep, "Att semanal.xlsx", which = "PIB anual")
 
 
-#Dados para resultados
-result = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=3000&$skip=0&$filter=Indicador%20eq%20'Fiscal'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media,DesvioPadrao,numeroRespondentes")))
-result$Data = as.Date(result$Data, "%Y-%m-%d")
-result = result[order(result$Data, result$DataReferencia),]
-result$Media = as.numeric(gsub(",", ".", result$Media))
-result$DesvioPadrao = as.numeric(gsub(",", ".", result$DesvioPadrao))
-Encoding(result$IndicadorDetalhe) = "UTF-8"
+#Dados para result_divados (primário e nominal), dívidas (líquida e bruta), BP, IDE e câmbio
+result_div_BP_IDE_C = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=10000&$orderby=Data%20desc&$format=text/csv&$select=Indicador,Data,DataReferencia,Media,DesvioPadrao,numeroRespondentes")))
+result_div_BP_IDE_C$Data = as.Date(result_div_BP_IDE_C$Data, "%Y-%m-%d")
+result_div_BP_IDE_C = result_div_BP_IDE_C[order(result_div_BP_IDE_C$Data, result_div_BP_IDE_C$DataReferencia),]
+result_div_BP_IDE_C$Media = as.numeric(gsub(",", ".", result_div_BP_IDE_C$Media))
+result_div_BP_IDE_C$DesvioPadrao = as.numeric(gsub(",", ".", result_div_BP_IDE_C$DesvioPadrao))
+Encoding(result_div_BP_IDE_C$Indicador) = "UTF-8"
+
 
 #8) Resultado primário
-result_prim = result %>% filter(IndicadorDetalhe=="Resultado Primário")
+result_prim = result_div_BP_IDE_C %>% filter(Indicador=="Resultado primário")
 result_prim = setDT(result_prim)[, .SD[which.max(numeroRespondentes)], c("Data", "DataReferencia")]
-result_prim = subset(result_prim, select = -c(Indicador, IndicadorDetalhe, numeroRespondentes))
+result_prim = subset(result_prim, select = -c(Indicador, numeroRespondentes))
 for (i in 1:length(unique(result_prim$DataReferencia))){
   ano = unique(result_prim$DataReferencia)[order(unique(result_prim$DataReferencia))][i]
   dados = result_prim %>% filter(DataReferencia==ano)
@@ -288,9 +289,9 @@ export(result_prim_sep, "Att semanal.xlsx", which = "Result_prim")
 
 
 #9) Resultado nominal
-result_nominal = result %>% filter(IndicadorDetalhe=="Resultado Nominal")
+result_nominal = result_div_BP_IDE_C %>% filter(Indicador=="Resultado nominal")
 result_nominal = setDT(result_nominal)[, .SD[which.max(numeroRespondentes)], c("Data", "DataReferencia")]
-result_nominal = subset(result_nominal, select = -c(Indicador, IndicadorDetalhe, numeroRespondentes))
+result_nominal = subset(result_nominal, select = -c(Indicador, numeroRespondentes))
 for (i in 1:length(unique(result_nominal$DataReferencia))){
   ano = unique(result_nominal$DataReferencia)[order(unique(result_nominal$DataReferencia))][i]
   dados = result_nominal %>% filter(DataReferencia==ano)
@@ -307,19 +308,10 @@ write.csv2(result_nominal_sep,"09-Result_nominal.csv", row.names = F)
 export(result_nominal_sep, "Att semanal.xlsx", which = "Result_nominal")
 
 
-#Dados para dívidas
-div = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=3000&$skip=0&$filter=Indicador%20eq%20'Fiscal'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media,DesvioPadrao,numeroRespondentes")))
-div$Data = as.Date(div$Data, "%Y-%m-%d")
-div = div[order(div$Data, div$DataReferencia),]
-div$Media = as.numeric(gsub(",", ".", div$Media))
-div$DesvioPadrao = as.numeric(gsub(",", ".", div$DesvioPadrao))
-Encoding(div$IndicadorDetalhe) = "UTF-8"
-
-
 #10) Dívida líquida
-div_liquida = div %>% filter(IndicadorDetalhe=="Dívida líquida do setor público")
+div_liquida = result_div_BP_IDE_C %>% filter(Indicador=="Dívida líquida do setor público")
 div_liquida = setDT(div_liquida)[, .SD[which.max(numeroRespondentes)], c("Data", "DataReferencia")]
-div_liquida = subset(div_liquida, select = -c(Indicador, IndicadorDetalhe, numeroRespondentes))
+div_liquida = subset(div_liquida, select = -c(Indicador, numeroRespondentes))
 for (i in 1:length(unique(div_liquida$DataReferencia))){
   ano = unique(div_liquida$DataReferencia)[order(unique(div_liquida$DataReferencia))][i]
   dados = div_liquida %>% filter(DataReferencia==ano)
@@ -337,9 +329,9 @@ export(div_liquida_sep, "Att semanal.xlsx", which = "Div_liquida")
 
 
 #11) Dívida bruta
-div_bruta = div %>% filter(IndicadorDetalhe=="Dívida bruta do governo geral")
+div_bruta = result_div_BP_IDE_C %>% filter(Indicador=="Dívida bruta do governo geral")
 div_bruta = setDT(div_bruta)[, .SD[which.max(numeroRespondentes)], c("Data", "DataReferencia")]
-div_bruta = subset(div_bruta, select = -c(Indicador, IndicadorDetalhe, numeroRespondentes))
+div_bruta = subset(div_bruta, select = -c(Indicador, numeroRespondentes))
 for (i in 1:length(unique(div_bruta$DataReferencia))){
   ano = unique(div_bruta$DataReferencia)[order(unique(div_bruta$DataReferencia))][i]
   dados = div_bruta %>% filter(DataReferencia==ano)
@@ -357,12 +349,11 @@ export(div_bruta_sep, "Att semanal.xlsx", which = "Div_bruta")
 
 
 #12) Taxa câmbio final do ano
-tx_cambio_final = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=700&$skip=0&$filter=Indicador%20eq%20'Taxa%20de%20c%C3%A2mbio'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media,DesvioPadrao,numeroRespondentes")))
+tx_cambio_final = result_div_BP_IDE_C %>% filter(Indicador=="Câmbio")
 tx_cambio_final$Data = as.Date(tx_cambio_final$Data, "%Y-%m-%d")
 tx_cambio_final = tx_cambio_final[order(tx_cambio_final$Data, tx_cambio_final$DataReferencia),]
-tx_cambio_final = tx_cambio_final %>% filter(IndicadorDetalhe=="Fim do ano")
 tx_cambio_final = setDT(tx_cambio_final)[, .SD[which.max(numeroRespondentes)], c("Data", "DataReferencia")]
-tx_cambio_final = subset(tx_cambio_final, select = -c(Indicador, IndicadorDetalhe, numeroRespondentes))
+tx_cambio_final = subset(tx_cambio_final, select = -c(Indicador, numeroRespondentes))
 tx_cambio_final$Media = as.numeric(gsub(",", ".", tx_cambio_final$Media))
 tx_cambio_final$DesvioPadrao = as.numeric(gsub(",", ".", tx_cambio_final$DesvioPadrao))
 for (i in 1:length(unique(tx_cambio_final$DataReferencia))){
@@ -381,17 +372,10 @@ write.csv2(tx_cambio_final_sep,"12-Tx_cambio_final.csv", row.names = F)
 export(tx_cambio_final_sep, "Att semanal.xlsx", which = "Tx_cambio_final")
 
 
-#Dados para balanço de pagamentos e IDE
-bp = read.csv(url(paste("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=700&$filter=Indicador%20eq%20'Balan%C3%A7o%20de%20Pagamentos'&$orderby=Data%20desc&$format=text/csv&$select=Indicador,IndicadorDetalhe,Data,DataReferencia,Media,numeroRespondentes")))
-bp$Data = as.Date(bp$Data, "%Y-%m-%d")
-bp = bp[order(bp$Data, bp$DataReferencia),]
-bp$Media = as.numeric(gsub(",", ".", bp$Media))
-
-
 #13) Balanço de pagamentos
-bp_cc = bp %>% filter(IndicadorDetalhe=="Conta corrente")
+bp_cc = result_div_BP_IDE_C %>% filter(Indicador=="Conta corrente")
 bp_cc = setDT(bp_cc)[, .SD[which.max(numeroRespondentes)], c("Data", "DataReferencia")]
-bp_cc = subset(bp_cc, select = -c(Indicador, IndicadorDetalhe, numeroRespondentes))
+bp_cc = subset(bp_cc, select = -c(Indicador, numeroRespondentes, DesvioPadrao))
 for (i in 1:length(unique(bp_cc$DataReferencia))){
   ano = unique(bp_cc$DataReferencia)[order(unique(bp_cc$DataReferencia))][i]
   dados = bp_cc %>% filter(DataReferencia==ano)
@@ -409,12 +393,12 @@ export(bp_cc_sep, "Att semanal.xlsx", which = "Balanço_de_pgto")
 
 
 #14) Investimento direto no país
-bp$IndicadorDetalhe <- ifelse(bp$IndicadorDetalhe == "Investimento direto no paÃ­s",
+result_div_BP_IDE_C$Indicador <- ifelse(result_div_BP_IDE_C$Indicador == "Investimento direto no paÃ­s",
                             'Investimento direto no país',
-                            bp$IndicadorDetalhe) #Corrigindo nomes
-bp_ide = bp %>% filter(IndicadorDetalhe=="Investimento direto no país")
+                            result_div_BP_IDE_C$Indicador) #Corrigindo nomes
+bp_ide = result_div_BP_IDE_C %>% filter(Indicador=="Investimento direto no país")
 bp_ide = setDT(bp_ide)[, .SD[which.max(numeroRespondentes)], c("Data", "DataReferencia")]
-bp_ide = subset(bp_ide, select = -c(Indicador, IndicadorDetalhe, numeroRespondentes))
+bp_ide = subset(bp_ide, select = -c(Indicador, numeroRespondentes, DesvioPadrao))
 for (i in 1:length(unique(bp_ide$DataReferencia))){
   ano = unique(bp_ide$DataReferencia)[order(unique(bp_ide$DataReferencia))][i]
   dados = bp_ide %>% filter(DataReferencia==ano)

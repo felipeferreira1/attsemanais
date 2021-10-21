@@ -1,10 +1,10 @@
 "";"Indicadores";"Valores"
-"1";"Meta Selic";4,25
-"2";"Selic acumulada no mês - % a.m.";0,18
-"3";"Selic acumulada nos últimos 12 meses - % a.a.";2,14064345537603
+"1";"Meta Selic";6,25
+"2";"Selic acumulada no mês - % a.m.";0,31
+"3";"Selic acumulada nos últimos 12 meses - % a.a.";3,1643195702064
 "4";"Swap_DI_Pre_360 dias";NA
-"5";"Expectativa de inflação acumulada em 12 meses (Focus)";4,39
-"6";"Indicadores do Top 5 - IPCA - Médio Prazo Mensal - variação % (acumulada em 12 meses)- Mediana - Mensal (Focus/BCB)";4,52061925179374
+"5";"Expectativa de inflação acumulada em 12 meses (Focus)";4,6072
+"6";"Indicadores do Top 5 - IPCA - Médio Prazo Mensal - variação % (acumulada em 12 meses)- Mediana - Mensal (Focus/BCB)";5,29236739242098
 "7";"Taxa real de juros ex-ante (mediana da amostra completa)";NA
-"8";"Taxa real de juros ex-post";-5,79730102785102
-"9";"IPCA acumulado 12 meses";8,42645122681029
+"8";"Taxa real de juros ex-post";-6,25962708141539
+"9";"IPCA acumulado 12 meses";10,053242117787
