@@ -17,6 +17,7 @@ library("rio")
 library("data.table")
 library("RQuantLib")
 library("lubridate")
+library("BatchGetSymbols")
 
 #Criando função para coleta de séries
 coleta_dados_sgs = function(series,datainicial="01/03/2011", datafinal = format(Sys.time(), "%d/%m/%Y")){
@@ -107,13 +108,17 @@ export(base1, "Att semanal.xlsx", which = "Taxas_de_juros")
 
 
 #3) Swaps diário, dólar, Ibovespa, SP&500
-serie2a = c("7806", "1", "7")
-base2a = coleta_dados_sgs(serie2a, "22/05/2000")
+serie2a = c("7806", "1")
+base2a = coleta_dados_sgs(serie2a, "01/01/2000")
 
-serie2b = c("SP500")
-base2b = coleta_dados_fred(serie2b, "2000-05-22")
+serie2b = BatchGetSymbols('^BVSP', first.date = as.Date('2000-01-01'))
+base2b <- serie2b$df.tickers %>% select(data = ref.date, ibovespa = price.close)
+
+serie2c <- BatchGetSymbols('^GSPC', first.date = as.Date('2000-01-01'))
+base2c <- serie2c$df.tickers %>% select(data = ref.date, sp500 = price.close)
 
 base2 = merge(base2a, base2b[-1,], by = "data", all = T)
+base2 = merge(base2, base2c[-1,], by = "data", all = T)
 
 names(base2) = c("Data","7806 - Taxa referencial de swaps DI pré-fixada (BM&F) - Prazo de 360 dias - % a.a.",
                  "1 - Taxa de câmbio - Livre - Dólar americano (venda) - diário - u.m.c./US$",
